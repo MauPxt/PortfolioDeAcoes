@@ -3,64 +3,59 @@ require(data.table)
 require(ggplot2)
 require(scales)
 
-# Importando dados dos ativos de interesse
-bpan <-
-    getSymbols(
-        "BPAN4.SA",
+# Variável que armazena o código dos papéis de interesse
+ativos <- c("BOVA11.SA", "SANB11.SA", "BBAS3.SA", "BBDC4.SA", "ITUB4.SA")
+
+# Laço de repetição para cada papel de interesse
+portfolio <- NULL
+for (elemento in ativos) {
+    # obtém os dados do papel de interesse
+    acao <- getSymbols(
+        elemento,
         src = "yahoo",
         from = "2018-01-01",
-        to = "2021-11-01",
+        to = "2022-01-01",
         auto.assign = F
     )
-bova <-
-    getSymbols(
-        "BOVA11.SA",
-        src = "yahoo",
-        from = "2018-01-01",
-        to = "2021-11-01",
-        auto.assign = F
+    # junção dos dados do papel de interesse em um dataframe
+    portfolio <- rbind(
+        portfolio,
+        data.frame(
+            data = index(acao),
+            ativo = coredata(elemento),
+            preco = as.vector(Ad(acao))
+        )
     )
-
-# Transformando os dados em data frames
-banco_pan <-
-    data.frame(
-        date = index(bpan),
-        ticker = coredata("BPAN"),
-        price = as.vector(Ad(bpan))
-    )
-ibovespa <-
-    data.frame(
-        date = index(bova),
-        ticker = coredata("BOVA"),
-        price = as.vector(Ad(bova))
-    )
+}
+# removendo valores nulos do dataframe
+portfolio <- na.omit(portfolio)
 
 
-data <- rbind(banco_pan, ibovespa)
+# cálculo da variação do preço de cada papel
+dt <- data.table(portfolio)
+dt[, data := as.Date(data)]
+dt[, idx_preco := preco / preco[1], by = ativo]
 
-# Manipulando os dados com a função data table
-dt <- data.table(data)
-dt[, date := as.Date(date)]
-dt[, idx_price := price / price[1], by = ticker]
-
-# Plotando um gráfico com os desempenhos dos dois ativos
-ggplot(dt, aes(x = date, y = idx_price, color = ticker)) +
+# plotagem do gráfico do comportamento do preço dos papéis
+ggplot(dt, aes(x = data, y = idx_preco, color = ativo)) +
     geom_line() +
     theme_bw() +
     xlab("Data") +
-    ylab("Preço (01-01-2018 = 1)") +
-    scale_color_discrete(name = "Companhia")
+    ylab("Variação") +
+    scale_color_discrete(name = "Ativo")
 
-# Manipulando os dados para obter uma melhor visualização dos retornos
-dt[, ret := price / shift(price, 1) - 1, by = ticker]
-tab <- dt[!is.na(ret), .(ticker, ret)]
-tab <- tab[, .(RE = mean(ret), DV = sd(ret)), by = "ticker"]
-tab
 
-# Plotando o gráfico dos retornos dos dois ativos
-ggplot(tab, aes(x = DV, y = RE, color = ticker)) +
+# cálculo do retorno dos papéis
+dt[, ret := preco / shift(preco, 1) - 1, by = ativo]
+tab <- dt[!is.na(ret), .(ativo, ret)]
+tab <- tab[, .(RE = mean(ret), DV = sd(ret)), by = "ativo"]
+
+
+# plotagem do gráfico do risco e retorno dos papéis
+ggplot(tab, aes(x = DV, y = RE, color = ativo)) +
     geom_point(size = 5) +
     xlab("Volatilidade") +
     ylab("Retorno") +
     scale_y_continuous(label = percent) +
-    scale_x_continuous(label = percent)
+    scale_x_continuous(label = percent) +
+    scale_color_discrete(name = "Ativo")
