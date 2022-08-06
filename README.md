@@ -1,5 +1,5 @@
 # Analisando ativos com o R
- Dois scripts feitos para analisar ativos na linguagem R. O primeiro script "fronteira_eficiencia" analisa e retorna a melhor alocação de ativos em duas carteiras hipotéticas. Enquanto o segundo script "risco_retorno" calcula o risco retorno de dois ativos.
+ Dois scripts feitos para analisar ativos na linguagem R. O primeiro script "fronteira_eficiencia" analisa e retorna a melhor alocação de ativos em duas carteiras hipotéticas. Enquanto o segundo script "risco_retorno" calcula o risco retorno de ativos.
 
 ## Feito com:
  <p align="left">
