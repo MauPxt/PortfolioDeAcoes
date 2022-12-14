@@ -2,24 +2,28 @@ require(quantmod)
 require(PerformanceAnalytics)
 library(fPortfolio)
 
-# Importando os dados dos ativos de interesse
-getSymbols("BPAN4.SA", src = "yahoo")
-getSymbols("BOVA11.SA", src = "yahoo")
+# criando uma função para calcular os retornos. A função consegue receber uma quantidade indefinida de papéis
+calcularRetornos <- function(...) {
+  # Pegar todos os simbolos passados para a função
+  symbols <- c(...)
 
-# Calculando o retorno dos ativos
-p <- BPAN4.SA$BPAN4.SA.Close
-p <- na.omit(p)
-r <- Return.calculate(p)
-rb <- apply.weekly(r, mean)
+  # Baixear os dados e calcular o retorno de cada um dos papéis
+  listaRetornos <- purrr::map(symbols, function(symbol) {
+    p <- getSymbols(symbol, src = "yahoo", auto.assign = FALSE)
+    p <- Cl(p)
+    r <- Return.calculate(p)
+    rb <- apply.weekly(r, mean)
+    return(rb)
+  })
 
-p <- BOVA11.SA$BOVA11.SA.Close
-p <- na.omit(p)
-r <- Return.calculate(p)
-ri <- apply.weekly(r, mean)
+  # Convertendo o resultado em uma série temporal
+  retornos <- as.timeSeries(listaRetornos)
+  
+  return(retornos)
+}
 
-retornos <- cbind(rb, ri)
-retornos <- na.omit(retornos)
-retornos <- as.timeSeries(retornos)
+# Chamando a função com os papéis
+retornos <- calculate_returns("BOVA11.SA","BPAN4.SA")
 
 # Montando um portfólio com foco na eficiencia
 portfolio_eficiente <-
