@@ -3,10 +3,10 @@ require(PerformanceAnalytics)
 library(fPortfolio)
 
 # Função para calcular os retornos semanais de uma lista de ativos
-calcularRetornos <- function(symbols, de='2020-01-01', ate='2020-12-31') {
-  retornos <- lapply(symbols, function(symbol) {
-    data <- getSymbols(symbol, src = "yahoo", auto.assign = FALSE, from = de, to = ate)
-    p <- data[, paste0(symbol, ".Close")]
+calcularRetornos <- function(acoes, de='2020-01-01', ate='2020-12-31') {
+  retornos <- lapply(acoes, function(acao) {
+    data <- getSymbols(acao, src = "yahoo", auto.assign = FALSE, from = de, to = ate)
+    p <- data[, paste0(acao, ".Close")]
     r <- Return.calculate(na.omit(p))
     apply.weekly(r, mean)
   })
